@@ -106,6 +106,10 @@ function tools::install() {
     --directory "${BIN_DIR}" \
     --token "${token}"
 
+  util::tools::yj::install \
+    --directory "${BIN_DIR}" \
+    --token "${token}"
+
   if [[ -f "${ROOT_DIR}/.libbuildpack" ]]; then
     util::tools::packager::install \
       --directory "${BIN_DIR}"
@@ -144,26 +148,38 @@ function buildpackage::create() {
 
   util::print::title "Packaging ${buildpack_type}... ${output}"
 
-  if [ "$buildpack_type" == "extension" ]; then
-    cwd=$(pwd)
-    cd ${BUILD_DIR}
-    mkdir cnbdir
-    cd cnbdir
-    cp ../buildpack.tgz .
-    tar -xvf buildpack.tgz
-    rm buildpack.tgz
-
-    pack \
-      extension package "${output}" \
-        --format file
-
-    cd $cwd
-  else
-    pack \
-      buildpack package "${output}" \
-        --path "${BUILD_DIR}/buildpack.tgz" \
-        --format file
+  # Read targets from buildpack.toml
+  local -a targets=()
+  local buildpack_toml="${ROOT_DIR}/buildpack.toml"
+  if [[ -f "${buildpack_toml}" ]] && command -v yj >/dev/null 2>&1 && command -v jq >/dev/null 2>&1; then
+    util::print::info "Reading targets from ${buildpack_toml}..."
+    local targets_json
+    targets_json=$(cat "${buildpack_toml}" | yj -tj | jq -r '.targets[]? | "\(.os)/\(.arch)"' 2>/dev/null || echo "")
+    while IFS= read -r target; do
+      [[ -n "${target}" ]] && targets+=("${target}")
+    done <<< "${targets_json}"
+    [[ ${#targets[@]} -gt 0 ]] && util::print::info "Found ${#targets[@]} target(s) in buildpack.toml: ${targets[*]}"
   fi
+
+  mkdir ${BUILD_DIR}/cnbdir
+  tar -xvf ${BUILD_DIR}/buildpack.tgz -C ${BUILD_DIR}/cnbdir
+
+  local pack_args=(
+    "${buildpack_type}" package "${output}"
+    --path ${BUILD_DIR}/cnbdir
+    --format file
+  )
+
+  # Add target flags to prevent pack from auto-detecting the linux/ directory
+  if [[ ${#targets[@]} -gt 0 ]]; then
+    for target in "${targets[@]}"; do
+      pack_args+=(--target "${target}")
+    done
+  fi
+
+  pack "${pack_args[@]}"
+
+  rm -rf ${BUILD_DIR}/cnbdir
 }
 
 main "${@:-}"
