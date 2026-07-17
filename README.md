@@ -2,14 +2,15 @@
 
 ## `gcr.io/paketo-buildpacks/puma`
 
-The Puma CNB sets the start command for a given ruby application that runs on a [puma server](https://puma.io).
+The Puma CNB sets the start command for a given ruby application that runs on a
+[puma server](https://puma.io).
 
 ## Integration
 
-This CNB writes a start command, so there's currently no scenario we can
-imagine that you would need to require it as dependency. If a user likes to
-include some other functionality, it can be done independent of the Puma CNB
-without requiring a dependency of it.
+This CNB writes a start command, so there's currently no scenario we can imagine
+that you would need to require it as dependency. If a user likes to include some
+other functionality, it can be done independent of the Puma CNB without
+requiring a dependency of it.
 
 ## Packaging
 
@@ -24,7 +25,9 @@ For example:
 ./scripts/package.sh --version 0.4.60
 ```
 
-This will build the buildpack for all target architectures specified in `buildpack.toml` (amd64 and arm64 by default) and create architecture-specific buildpackages in the `build/` directory.
+This will build the buildpack for all target architectures specified in
+`buildpack.toml` (amd64 and arm64 by default) and create architecture-specific
+buildpackages in the `build/` directory.
 
 ## Publishing
 
@@ -51,7 +54,8 @@ For example:
 The script will automatically:
 - Read target architectures from `buildpack.toml`
 - Extract the buildpack archive
-- Publish each architecture separately with arch-suffixed tags (e.g., `puma:0.4.60-amd64`, `puma:0.4.60-arm64`)
+- Publish each architecture separately with arch-suffixed tags (e.g.,
+  `puma:0.4.60-amd64`, `puma:0.4.60-arm64`)
 - Create and push a multi-arch manifest list
 
 ## `buildpack.yml` Configurations
