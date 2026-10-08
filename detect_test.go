@@ -80,11 +80,34 @@ func testDetect(t *testing.T, context spec.G, it spec.S) {
 			gemfileParser.ParseCall.Returns.HasPuma = false
 		})
 
-		it("detect should fail with error", func() {
-			_, err := detect(packit.DetectContext{
+		it("still detects", func() {
+			result, err := detect(packit.DetectContext{
 				WorkingDir: workingDir,
 			})
-			Expect(err).To(MatchError(packit.Fail.WithMessage("puma was not found in the Gemfile")))
+			Expect(err).NotTo(HaveOccurred())
+			Expect(result.Plan).To(Equal(packit.BuildPlan{
+				Provides: []packit.BuildPlanProvision{},
+				Requires: []packit.BuildPlanRequirement{
+					{
+						Name: "gems",
+						Metadata: puma.BuildPlanMetadata{
+							Launch: true,
+						},
+					},
+					{
+						Name: "bundler",
+						Metadata: puma.BuildPlanMetadata{
+							Launch: true,
+						},
+					},
+					{
+						Name: "mri",
+						Metadata: puma.BuildPlanMetadata{
+							Launch: true,
+						},
+					},
+				},
+			}))
 		})
 	})
 
